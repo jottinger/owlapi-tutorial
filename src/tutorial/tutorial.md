@@ -158,7 +158,7 @@ A class can have attributes (a concept familiar to Java coders); these are "prop
 data or references (again, just like Java). Properties can have ranges or defined subsets of values.
 
 A class can also have the concept of a superclass (again, just like Java): a Fireman class might be a valid subclass 
-of Person.
+of Person. However, there is no limit to the number of superclasses; a Fireman might be a subclass of the Person, PublicServant, WearsRed, and DrivesTruck classes. Java can model some of this with interfaces, but it's not an exact analogy.
 
 An "Individual" is a concrete instance of a class - much like an "instance," in Java parlance. "John" might be a 
 fireman, which implies that he is a person; Sam might be a person (but not a fireman). Sam might have a dog, Fritz, 

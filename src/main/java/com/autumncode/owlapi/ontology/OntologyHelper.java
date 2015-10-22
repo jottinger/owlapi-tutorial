@@ -5,11 +5,7 @@ import org.semanticweb.owlapi.io.OWLOntologyDocumentSource;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.util.AutoIRIMapper;
-import uk.ac.manchester.cs.jfact.JFactFactory;
 
-import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
 public class OntologyHelper {
@@ -87,5 +83,29 @@ public class OntologyHelper {
                                                        OWLClass clazz,
                                                        OWLIndividual individual) {
         return new AddAxiom(o, df.getOWLClassAssertionAxiom(clazz, individual));
+    }
+
+    public OWLAxiomChange addDisjointClass(OWLOntology o, OWLClass a, OWLClass b) {
+        OWLDisjointClassesAxiom expression=df.getOWLDisjointClassesAxiom(a, b);
+        return new AddAxiom(o, expression);
+    }
+
+    public OWLObjectProperty createObjectProperty(String iri) {
+        return createObjectProperty(convertStringToIRI(iri));
+    }
+
+    private OWLObjectProperty createObjectProperty(IRI iri) {
+        return df.getOWLObjectProperty(iri);
+    }
+
+    public OWLAxiomChange associateObjectPropertyWithClass(OWLOntology o, OWLObjectProperty property, OWLClass refHolder, OWLClass refTo) {
+        OWLClassExpression hasSomeRefTo=df.getOWLObjectSomeValuesFrom(property, refTo);
+        OWLSubClassOfAxiom ax=df.getOWLSubClassOfAxiom(refHolder, hasSomeRefTo);
+        return new AddAxiom(o, ax);
+    }
+
+    public OWLAxiomChange addObjectproperty(OWLOntology o, OWLIndividual target, OWLObjectProperty property, OWLIndividual value) {
+        OWLObjectPropertyAssertionAxiom prop=df.getOWLObjectPropertyAssertionAxiom(property, target, value);
+        return new AddAxiom(o, prop);
     }
 }

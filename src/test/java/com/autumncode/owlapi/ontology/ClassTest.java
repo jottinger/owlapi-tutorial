@@ -98,8 +98,6 @@ public class ClassTest {
                 oh.associateIndividualWithClass(o, robot, tank),
                 oh.associateIndividualWithClass(o, terminator, t800));
 
-        oh.dumpOWL(o);
-
         final OWLReasoner reasoner = new JFactFactory().createReasoner(o);
         try (final AutoCloseable ignored = reasoner::dispose) {
             ListMultimap<String, String> classInstanceMap = ArrayListMultimap.create();
@@ -123,5 +121,61 @@ public class ClassTest {
             assertEquals(new HashSet<>(classInstanceMap.asMap().get(robot.toStringID())), robots);
             assertEquals(new HashSet<>(classInstanceMap.asMap().get(terminator.toStringID())), terminators);
         }
+    }
+
+    @Test
+    public void simpleParentage() throws Exception {
+        OntologyHelper oh = new OntologyHelper();
+        OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/genealogy.owl");
+        OWLClass human = oh.createClass("http://autumncode.com/ontologies/geneaology.owl#Human");
+        OWLClass male = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Male");
+        OWLClass female = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Female");
+        OWLObjectProperty hasFather =
+                oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasFather");
+        OWLObjectProperty hasMother =
+                oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasMother");
+        oh.applyChange(
+                oh.createSubclass(o, male, human),
+                oh.createSubclass(o, female, human),
+                //oh.addDisjointClass(o, female, male),
+                //oh.addDisjointClass(o, male, female),
+                oh.associateObjectPropertyWithClass(o, hasFather, human, male),
+                oh.associateObjectPropertyWithClass(o, hasMother, human, female)
+        );
+
+        OWLIndividual barry = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#barry");
+        OWLIndividual shirley = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#shirley");
+        OWLIndividual thomas = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#thomas");
+        OWLIndividual michael = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#michael");
+        OWLIndividual vicki = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#vicki");
+        OWLIndividual joseph = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#joseph");
+        OWLIndividual mary = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#mary");
+        OWLIndividual samuel = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#samuel");
+        OWLIndividual andrew = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#andrew");
+        OWLIndividual jonathan = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#jonathan");
+
+        oh.applyChange(
+                oh.associateIndividualWithClass(o, male, barry),
+                oh.associateIndividualWithClass(o, male, thomas),
+                oh.associateIndividualWithClass(o, male, michael),
+                oh.associateIndividualWithClass(o, male, joseph),
+                oh.associateIndividualWithClass(o, male, samuel),
+                oh.associateIndividualWithClass(o, male, andrew),
+                oh.associateIndividualWithClass(o, male, jonathan),
+                oh.associateIndividualWithClass(o, female, shirley),
+                oh.associateIndividualWithClass(o, female, vicki),
+                oh.associateIndividualWithClass(o, female, mary),
+                oh.addObjectproperty(o, michael, hasMother, shirley),
+                oh.addObjectproperty(o, michael, hasFather, thomas),
+                oh.addObjectproperty(o, vicki, hasMother, shirley),
+                oh.addObjectproperty(o, vicki, hasFather, thomas),
+                oh.addObjectproperty(o, joseph, hasMother, shirley),
+                oh.addObjectproperty(o, joseph, hasFather, barry),
+                oh.addObjectproperty(o, andrew, hasMother, mary),
+                oh.addObjectproperty(o, andrew, hasFather, samuel),
+                oh.addObjectproperty(o, jonathan, hasMother, vicki),
+                oh.addObjectproperty(o, jonathan, hasFather, andrew)
+        );
+        oh.dumpOWL(o);
     }
 }
