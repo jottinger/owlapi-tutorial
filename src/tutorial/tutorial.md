@@ -714,7 +714,7 @@ Adding a Property to a Class
 
 It's potentially useful to be able to determine class relationships and individual participation in classes, but we're
 not actually describing much yet. In our Terminator example, for example, we have *one* Tank, *one* T800, *one* Sarah
-Connor, *one* T800. Since we know that there are many T800s and many Tanks (and, depending on how much you liked [Terminator:Genisys](http://www.imdb.com/title/tt1340138/), multiple Sarahs as well) we need to have a way of differentiating individuals beyond their names.
+Connor. Since we know that there are many T800s and many Tanks (and, depending on how much you liked [Terminator:Genisys](http://www.imdb.com/title/tt1340138/), multiple Sarahs as well) we need to have a way of differentiating individuals beyond their names.
 
 Let's start by looking at a simpler description of people, and build a genealogy structure. We'll have three classes 
 (Human, Female, and Male), and add two properties to Person (references to mother and father). Since Mother and Father are derived from Person, we can declare individuals by gender and inherit the properties referring to parentage from Human.
