@@ -13,7 +13,6 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
 public class OntologyHelper {
-    private IRI baseIRI;
     OWLOntologyManager m = OWLManager.createOWLOntologyManager();
     OWLDataFactory df = OWLManager.getOWLDataFactory();
 
@@ -21,12 +20,20 @@ public class OntologyHelper {
         return IRI.create(ns);
     }
 
-    public void setBaseIRI(String baseIRI) {
-        this.baseIRI = convertStringToIRI(baseIRI);
-    }
-
-    public IRI getBaseIRI() {
-        return baseIRI;
+    /**
+     * Simple method to write an OWL structure to <code>System.out</code>. It is basically a wrapper
+     * for the writeOntology method.
+     * @param ontology the ontology to display
+     */
+    public void dumpOWL(OWLOntology ontology) {
+        try {
+            StringDocumentTarget sdt = new StringDocumentTarget();
+            writeOntology(ontology, sdt);
+            System.out.println(sdt);
+        } catch (Exception e) {
+            // this is where Scala would be nice.
+            throw new RuntimeException(e);
+        }
     }
 
     public OWLOntology createOntology(String iri) throws OWLOntologyCreationException {

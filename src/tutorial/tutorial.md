@@ -495,7 +495,7 @@ of code.
 
 Note that we've only expressed the idea that we can have an ontology that describes people, robots, 
 and things that are both robots and people (i.e., Terminators). We could create Captain Kirk, 
-the T-1000, and R2-D2, all while ignoring the shrieks of rage from Trekkies, Star Wars fans, and
+the T-800, and R2-D2, all while ignoring the shrieks of rage from Trekkies, Star Wars fans, and
 whoever cares about the Terminator.
 
 Time to fix that. We still won't be able to describe any of these individuals besides their names
@@ -572,6 +572,142 @@ In Java, we've basically modeled something like this:
 
 Let's go a little further, and add individuals to our Terminator knowledge base, for a more complex example.
 
+Here's the code that actually creates the ontology and the three classes (Person, Robot, Terminator) and the relationships between them (a Terminator is a Person and a Robot):
+
+    OntologyHelper oh = new OntologyHelper();
+    OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/terminator.owl");
+    OWLClass person = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Person");
+    OWLClass robot = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Robot");
+    OWLClass terminator = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Terminator");
+
+    oh.applyChange(oh.createSubclass(o, terminator, person),
+            oh.createSubclass(o, terminator, robot));
+
+Now we'd like to create the three individuals ("[Sarah](http://terminator.wikia.com/wiki/Sarah_Connor),"" a human; 
+"[Tank](http://terminator.wikia.com/wiki/HK-Tank)," a nonhumanoid robot, and 
+"[T800](http://terminator.wikia.com/wiki/T-800_(The_Terminator))," a Terminator):
+
+    OWLIndividual sarah = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#Sarah");
+    OWLIndividual tank = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#Tank");
+    OWLIndividual t800 = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#T800");
+    oh.applyChange(oh.associateIndividualWithClass(o, person, sarah),
+            oh.associateIndividualWithClass(o, robot, tank),
+            oh.associateIndividualWithClass(o, terminator, t800));
+
+The OWL that represents this ontology looks like this:
+
+    <?xml version="1.0"?>
+    <rdf:RDF xmlns="http://autumncode.com/ontologies/terminator.owl#"
+         xml:base="http://autumncode.com/ontologies/terminator.owl"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:xml="http://www.w3.org/XML/1998/namespace"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+        <owl:Ontology rdf:about="http://autumncode.com/ontologies/terminator.owl"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Classes
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- Person -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/terminator.owl#Person"/>
+
+        <!-- Robot -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/terminator.owl#Robot"/>
+
+        <!-- Terminator -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/terminator.owl#Terminator">
+            <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/terminator.owl#Person"/>
+            <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/terminator.owl#Robot"/>
+        </owl:Class>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Individuals
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- Sarah -->
+
+        <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/terminator.owl#Sarah">
+            <rdf:type rdf:resource="http://autumncode.com/ontologies/terminator.owl#Person"/>
+        </owl:NamedIndividual>
+        
+        <!-- T800 -->
+
+        <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/terminator.owl#T800">
+            <rdf:type rdf:resource="http://autumncode.com/ontologies/terminator.owl#Terminator"/>
+        </owl:NamedIndividual>
+        
+        <!-- Tank -->
+
+        <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/terminator.owl#Tank">
+            <rdf:type rdf:resource="http://autumncode.com/ontologies/terminator.owl#Robot"/>
+        </owl:NamedIndividual>
+    </rdf:RDF>
+
+Here's where things get interesting. We said that the T800 is a Terminator, not that it's a Robot or a Person; our test
+needs to validate its participation in all three classes (Terminator, Robot, Person), even though our OWL doesn't *say*
+that it's a member of all three classes. This is where the `OWLReasoner` comes in; it's able to infer the complete
+class hierarchy for an individual (or, as we're using it here, it's able to find all individuals who are members of a given class.) 
+
+This is the beginning of seeing some real power in OWL, even though we're expressing something very simple: we can describe what things are (a Terminator is a Robot and a Person), express characteristics about individuals (a T800 is a Terminator) and extract meaningful data from the ontology (i.e., that the T800 is both a Robot and a Person, while the Tank is only a Robot.)
+
+Here's the *complete* test method, including the extraction of individuals into classes and the conversion of data into
+comparable sets:
+
+    @Test
+    public void addTerminatorIndividuals() throws Exception {
+        OntologyHelper oh = new OntologyHelper();
+        OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/terminator.owl");
+        OWLClass person = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Person");
+        OWLClass robot = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Robot");
+        OWLClass terminator = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Terminator");
+
+        oh.applyChange(oh.createSubclass(o, terminator, person),
+                oh.createSubclass(o, terminator, robot));
+
+        OWLIndividual sarah = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#Sarah");
+        OWLIndividual tank = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#Tank");
+        OWLIndividual t800 = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#T800");
+        oh.applyChange(oh.associateIndividualWithClass(o, person, sarah),
+                oh.associateIndividualWithClass(o, robot, tank),
+                oh.associateIndividualWithClass(o, terminator, t800));
+
+        final OWLReasoner reasoner = new JFactFactory().createReasoner(o);
+        try (final AutoCloseable ignored = reasoner::dispose) {
+            ListMultimap<String, String> classInstanceMap = ArrayListMultimap.create();
+            o.getClassesInSignature()
+                    .stream()
+                    .forEach(clazz ->
+                            reasoner.getInstances(clazz, false)
+                                    .getFlattened()
+                                    .stream()
+                                    .forEach(i ->
+                                            classInstanceMap.put(clazz.toStringID(), i.toStringID())));
+
+            // should have three classes
+            assertEquals(classInstanceMap.keySet().size(), 3);
+
+            Set<String> people = new HashSet<>(Arrays.asList(new String[]{sarah.toStringID(), t800.toStringID()}));
+            Set<String> robots = new HashSet<>(Arrays.asList(new String[]{t800.toStringID(), tank.toStringID()}));
+            Set<String> terminators = new HashSet<>(Arrays.asList(new String[]{t800.toStringID()}));
+
+            assertEquals(new HashSet<>(classInstanceMap.asMap().get(person.toStringID())), people);
+            assertEquals(new HashSet<>(classInstanceMap.asMap().get(robot.toStringID())), robots);
+            assertEquals(new HashSet<>(classInstanceMap.asMap().get(terminator.toStringID())), terminators);
+        }
+    }
 
 Adding a Property to a Class
 ----
