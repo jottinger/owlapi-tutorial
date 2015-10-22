@@ -583,7 +583,7 @@ Here's the code that actually creates the ontology and the three classes (Person
     oh.applyChange(oh.createSubclass(o, terminator, person),
             oh.createSubclass(o, terminator, robot));
 
-Now we'd like to create the three individuals ("[Sarah](http://terminator.wikia.com/wiki/Sarah_Connor),"" a human; 
+Now we'd like to create the three individuals ("[Sarah](http://terminator.wikia.com/wiki/Sarah_Connor)," a human; 
 "[Tank](http://terminator.wikia.com/wiki/HK-Tank)," a nonhumanoid robot, and 
 "[T800](http://terminator.wikia.com/wiki/T-800_(The_Terminator))," a Terminator):
 
@@ -711,6 +711,102 @@ comparable sets:
 
 Adding a Property to a Class
 ----
+
+It's potentially useful to be able to determine class relationships and individual participation in classes, but we're
+not actually describing much yet. In our Terminator example, for example, we have *one* Tank, *one* T800, *one* Sarah
+Connor, *one* T800. Since we know that there are many T800s and many Tanks (and, depending on how much you liked [Terminator:Genisys](http://www.imdb.com/title/tt1340138/), multiple Sarahs as well) we need to have a way of differentiating individuals beyond their names.
+
+Let's start by looking at a simpler description of people, and build a genealogy structure. We'll have three classes 
+(Human, Female, and Male), and add two properties to Person (references to mother and father). Since Mother and Father are derived from Person, we can declare individuals by gender and inherit the properties referring to parentage from Human.
+
+    OntologyHelper oh = new OntologyHelper();
+    OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/genealogy.owl");
+    OWLClass human = oh.createClass("http://autumncode.com/ontologies/geneaology.owl#Human");
+    OWLClass male = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Male");
+    OWLClass female = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Female");
+    OWLObjectProperty hasFather =
+            oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasFather");
+    OWLObjectProperty hasMother =
+            oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasMother");
+    oh.applyChange(
+            oh.createSubclass(o, male, human),
+            oh.createSubclass(o, female, human),
+            oh.associateObjectPropertyWithClass(o, hasFather, human, male),
+            oh.associateObjectPropertyWithClass(o, hasMother, human, female)
+    );
+
+This code generates the following OWL:
+
+    <?xml version="1.0"?>
+    <rdf:RDF xmlns="http://autumncode.com/ontologies/genealogy.owl#"
+         xml:base="http://autumncode.com/ontologies/genealogy.owl"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:xml="http://www.w3.org/XML/1998/namespace"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+        <owl:Ontology rdf:about="http://autumncode.com/ontologies/genealogy.owl"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Object Properties
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- hasFather -->
+
+        <owl:ObjectProperty rdf:about="http://autumncode.com/ontologies/genealogy.owl#hasFather"/>
+        
+        <!-- hasMother -->
+
+        <owl:ObjectProperty rdf:about="http://autumncode.com/ontologies/genealogy.owl#hasMother"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Classes
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- Female -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Female">
+            <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+        </owl:Class>
+
+        <!-- Male -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Male">
+            <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+        </owl:Class>
+
+        <!-- Human -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/geneaology.owl#Human">
+            <rdfs:subClassOf>
+                <owl:Restriction>
+                    <owl:onProperty rdf:resource="http://autumncode.com/ontologies/genealogy.owl#hasFather"/>
+                    <owl:someValuesFrom rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+                </owl:Restriction>
+            </rdfs:subClassOf>
+            <rdfs:subClassOf>
+                <owl:Restriction>
+                    <owl:onProperty rdf:resource="http://autumncode.com/ontologies/genealogy.owl#hasMother"/>
+                    <owl:someValuesFrom rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Female"/>
+                </owl:Restriction>
+            </rdfs:subClassOf>
+        </owl:Class>
+    </rdf:RDF>
+
+Now let's start describing a genealogy. We're describing a few generations of a family:
+
+Thomas, w. Shirley: Michael and Vicki
+Barry, w. Shirley: Joseph
+Samuel, w. Mary: Andrew
+Andrew, w. Vicki: Jonathan
 
 Adding a Property Value to an Individual
 ----
