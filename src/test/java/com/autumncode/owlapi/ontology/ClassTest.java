@@ -12,9 +12,7 @@ import uk.ac.manchester.cs.jfact.JFactFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertEqualsNoOrder;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class ClassTest {
     @Test
@@ -137,8 +135,8 @@ public class ClassTest {
         oh.applyChange(
                 oh.createSubclass(o, male, human),
                 oh.createSubclass(o, female, human),
-                //oh.addDisjointClass(o, female, male),
-                //oh.addDisjointClass(o, male, female),
+                oh.addDisjointClass(o, female, male),
+                oh.addDisjointClass(o, male, female),
                 oh.associateObjectPropertyWithClass(o, hasFather, human, male),
                 oh.associateObjectPropertyWithClass(o, hasMother, human, female)
         );
@@ -176,6 +174,16 @@ public class ClassTest {
                 oh.addObjectproperty(o, jonathan, hasMother, vicki),
                 oh.addObjectproperty(o, jonathan, hasFather, andrew)
         );
+
         oh.dumpOWL(o);
+        OWLReasoner reasoner = new JFactFactory().createReasoner(o);
+        try (final AutoCloseable ignored = reasoner::dispose) {
+            assertTrue(reasoner.isConsistent());
+        }
+        oh.applyChange(oh.associateIndividualWithClass(o, female, jonathan));
+        reasoner = new JFactFactory().createReasoner(o);
+        try (final AutoCloseable ignored = reasoner::dispose) {
+            assertFalse(reasoner.isConsistent());
+        }
     }
 }

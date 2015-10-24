@@ -1,5 +1,4 @@
-Introduction
-====
+# An Incomplete Introduction to OWLAPI
 
 OWL is a language used to describe ontologies - systems of knowledge. It's found primarily in the 
 [Semantic Web](https://en.wikipedia.org/wiki/Semantic_Web), which mostly means "hardly anywhere," and part of the 
@@ -26,8 +25,7 @@ are included, but how to use the code snippets in a more recent version of the l
 
 I'd like to change that, if I can.
 
-Expectations
-----
+## Expectations
 
 After this tutorial is finished, I expect readers to be able to create, read, and write ontologies, with a basic 
 understanding of what the various common elements in ontologies are and how they're used. 
@@ -40,8 +38,7 @@ Much of OWLAPI programming involves [cargo cult programming](https://en.wikipedi
 "I did this, it worked, therefore I do it every time." I'm afraid that I don't know how to get around this, 
 but trying to limit the cargo cult mentality is partially why I'm trying to write this tutorial in the first place.
 
-Requirements
------
+## Requirements
 
 I am using:
 
@@ -145,8 +142,7 @@ OWLAPI itself; `owlapi-rio`, which has some classes we need in order to parse an
 OWL; lastly, there's `jfact`, which is a reasoner implementation for OWL. (A reasoner
 is used to pull various types of information from OWL.)
 
-Terms
-----
+## Terms
 
 * An "Ontology" is a system of knowledge. It is composed of descriptions of what things are as well as a set of things.
 
@@ -164,8 +160,7 @@ An "Individual" is a concrete instance of a class - much like an "instance," in 
 fireman, which implies that he is a person; Sam might be a person (but not a fireman). Sam might have a dog, Fritz, 
 who is *not* a Person (instead, is a Dog). All three would be individuals, with varying properties.
 
-Working with OWLAPI
-====
+# Working with OWLAPI
 
 OWL uses the concept of an "IRI," an "Internationalized Resource Identifier." It's a lot like a URI, but has a wider
 set of characters available to it; for the sake of clarity we'll stay seven-bit-clean. 
@@ -182,8 +177,7 @@ OWLAPI will look something like this:
 1. Express an axiom using the two references.
 1. Apply the axiom as a change to the ontology.
 
-Creating an Ontology
-----
+## Creating an Ontology
 
 Before we can do anything with an ontology, we need to be able to create one. We're going to create a stateful helper
 class in Java to serve as a simple delegate to OWLAPI; it will retain some simple references that we'll end up using
@@ -247,8 +241,7 @@ one of which is used by the test, since we pass in an `IRI` directly).
         return m.createOntology(iri);
     }
 
-Writing an Ontology
-----
+## Writing an Ontology
 
 Writing an ontology is fairly simple. To write an ontology, we simply create a `OWLOntologyDocumentTarget` of some 
 kind - examples include a `StringDocumentTarget` and a `FileDocumentTarget`, among others - and then call 
@@ -275,8 +268,7 @@ Here, we're creating our ontology (just as we did earlier), but we're writing it
 then use that `StringDocumentTarget` to demonstrate reading the ontology, using the read content to validate the
 ontology ID.
 
-Reading an Ontology
-----
+## Reading an Ontology
 
 Now let's show a little more about reading an ontology - and when we say "a little more," we mean literally *only
 a little more*. We'll also use the `@DataProvider` concept in TestNG to give us some flexibility for when we create
@@ -330,8 +322,7 @@ As usual, our `OntologyHelper` code is far more simple than the test code is:
         return m.loadOntologyFromOntologyDocument(source);
     }
 
-Adding a Class to an Ontology
-----
+## Adding a Class to an Ontology
 
 Adding a class to an ontology is similar to adding a class to a Java package, with the main exception being that a
 class in an ontology doesn't exist without a relationship to something else. Therefore, in Java we can say 
@@ -501,8 +492,7 @@ whoever cares about the Terminator.
 Time to fix that. We still won't be able to describe any of these individuals besides their names
 and what class they are, but that'll be enough for the next step.
 
-Adding an Individual to an Ontology
-----
+## Adding an Individual to an Ontology
 
 Let's start with the simplest structure possible: let's create an ontology that has a class of 
 Person, and add Captain Kirk to the ontology as an instance of a Person.
@@ -709,8 +699,7 @@ comparable sets:
         }
     }
 
-Adding a Property to a Class
-----
+## Adding a Property to a Class
 
 It's potentially useful to be able to determine class relationships and individual participation in classes, but we're
 not actually describing much yet. In our Terminator example, for example, we have *one* Tank, *one* T800, *one* Sarah
@@ -735,7 +724,48 @@ Let's start by looking at a simpler description of people, and build a genealogy
             oh.associateObjectPropertyWithClass(o, hasMother, human, female)
     );
 
-This code generates the following OWL:
+We need to add `associateObjectPropertyWithClass` to `OntologyHelper`:
+
+    /**
+     * With ontology o, property in refHolder points to a refTo.
+     *
+     * @param o The ontology reference
+     * @param property the data property reference
+     * @param refHolder the container of the property
+     * @param refTo the class the property points to
+     * @return a patch to the ontology
+     */
+    public OWLAxiomChange associateObjectPropertyWithClass(OWLOntology o, 
+                                                           OWLObjectProperty property, 
+                                                           OWLClass refHolder, 
+                                                           OWLClass refTo) {
+        OWLClassExpression hasSomeRefTo=df.getOWLObjectSomeValuesFrom(property, refTo);
+        OWLSubClassOfAxiom ax=df.getOWLSubClassOfAxiom(refHolder, hasSomeRefTo);
+        return new AddAxiom(o, ax);
+    }
+
+We also want to add another method to the `OntologyHelper`, to manage a disjunction of classes. Our test doesn't 
+use it (but our next one will): what it says is that the first class cannot be the second class. Note that a
+disjunction like this is not reflexive - saying that 'a' cannot be a 'b' does not imply that 'b' cannot be an 'a';
+you have to specify the disjunction both ways if you're trying to express that relationship. We'll see how that
+works soon.
+
+    /**
+     * With ontology o, an object of class a cannot be simultaneously an object of class b.
+     * This is not implied to be an inverse relationship; saying that a cannot be a b does not
+     * mean that b cannot be an a.
+     * @param o the ontology reference
+     * @param a the source of the disjunction
+     * @param b the object of the disjunction
+     * @return a patch to the ontology
+     */
+    public OWLAxiomChange addDisjointClass(OWLOntology o, OWLClass a, OWLClass b) {
+        OWLDisjointClassesAxiom expression=df.getOWLDisjointClassesAxiom(a, b);
+        return new AddAxiom(o, expression);
+    }
+
+
+The test code generates the following OWL:
 
     <?xml version="1.0"?>
     <rdf:RDF xmlns="http://autumncode.com/ontologies/genealogy.owl#"
@@ -803,10 +833,164 @@ This code generates the following OWL:
 
 Now let's start describing a genealogy. We're describing a few generations of a family:
 
-Thomas, w. Shirley: Michael and Vicki
-Barry, w. Shirley: Joseph
-Samuel, w. Mary: Andrew
-Andrew, w. Vicki: Jonathan
+* Thomas, w. Shirley: Michael and Vicki
+* Barry, w. Shirley: Joseph
+* Samuel, w. Mary: Andrew
+* Andrew, w. Vicki: Jonathan
+
+Here's the code to build the geneaology structure, including the exclusion of Male and Female, along with the 
+actual family tree:
+
+    @Test
+    public void simpleParentage() throws Exception {
+        OntologyHelper oh = new OntologyHelper();
+        OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/genealogy.owl");
+        OWLClass human = oh.createClass("http://autumncode.com/ontologies/geneaology.owl#Human");
+        OWLClass male = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Male");
+        OWLClass female = oh.createClass("http://autumncode.com/ontologies/genealogy.owl#Female");
+        OWLObjectProperty hasFather =
+                oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasFather");
+        OWLObjectProperty hasMother =
+                oh.createObjectProperty("http://autumncode.com/ontologies/genealogy.owl#hasMother");
+        oh.applyChange(
+                oh.createSubclass(o, male, human),
+                oh.createSubclass(o, female, human),
+                oh.addDisjointClass(o, female, male),
+                oh.addDisjointClass(o, male, female),
+                oh.associateObjectPropertyWithClass(o, hasFather, human, male),
+                oh.associateObjectPropertyWithClass(o, hasMother, human, female)
+        );
+
+        OWLIndividual barry = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#barry");
+        OWLIndividual shirley = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#shirley");
+        OWLIndividual thomas = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#thomas");
+        OWLIndividual michael = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#michael");
+        OWLIndividual vicki = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#vicki");
+        OWLIndividual joseph = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#joseph");
+        OWLIndividual mary = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#mary");
+        OWLIndividual samuel = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#samuel");
+        OWLIndividual andrew = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#andrew");
+        OWLIndividual jonathan = oh.createIndividual("http://autumncode.com/ontologies/genealogy.owl#jonathan");
+
+        oh.applyChange(
+                oh.associateIndividualWithClass(o, male, barry),
+                oh.associateIndividualWithClass(o, male, thomas),
+                oh.associateIndividualWithClass(o, male, michael),
+                oh.associateIndividualWithClass(o, male, joseph),
+                oh.associateIndividualWithClass(o, male, samuel),
+                oh.associateIndividualWithClass(o, male, andrew),
+                oh.associateIndividualWithClass(o, male, jonathan),
+                oh.associateIndividualWithClass(o, female, shirley),
+                oh.associateIndividualWithClass(o, female, vicki),
+                oh.associateIndividualWithClass(o, female, mary),
+                oh.addObjectproperty(o, michael, hasMother, shirley),
+                oh.addObjectproperty(o, michael, hasFather, thomas),
+                oh.addObjectproperty(o, vicki, hasMother, shirley),
+                oh.addObjectproperty(o, vicki, hasFather, thomas),
+                oh.addObjectproperty(o, joseph, hasMother, shirley),
+                oh.addObjectproperty(o, joseph, hasFather, barry),
+                oh.addObjectproperty(o, andrew, hasMother, mary),
+                oh.addObjectproperty(o, andrew, hasFather, samuel),
+                oh.addObjectproperty(o, jonathan, hasMother, vicki),
+                oh.addObjectproperty(o, jonathan, hasFather, andrew)
+        );
+
+    // we'll be adding code here!
+    }
+
+The OWL this generates is pretty long, unfortunately. But here are some relevant parts from it, the Male and Female class declarations, along with Jonathan's individual reference:
+
+    <!-- Female -->
+
+    <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Female">
+        <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+        <owl:disjointWith rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+    </owl:Class>
+
+    <!-- Male -->
+
+    <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Male">
+        <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+    </owl:Class>
+
+    <!-- jonathan -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#jonathan">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#andrew"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#vicki"/>
+    </owl:NamedIndividual>
+
+If we didn't have that disjunction of Male and Female, there would be nothing in the ontology suggesting that
+a "has mother of" reference couldn't point to, say, Samuel. (Let's keep gender identity simple for the clarity's
+sake.)
+
+What happens if we actually add invalid data, though? Let's try it.
+
+    OWLReasoner reasoner = new JFactFactory().createReasoner(o);
+    try (final AutoCloseable ignored = reasoner::dispose) {
+        assertTrue(reasoner.isConsistent());
+    }
+    oh.applyChange(oh.associateIndividualWithClass(o, female, jonathan));
+    reasoner = new JFactFactory().createReasoner(o);
+    try (final AutoCloseable ignored = reasoner::dispose) {
+        assertFalse(reasoner.isConsistent());
+    }
+
+Here, we're checking to make sure our ontology is consistent (without error) - then we're intentionally
+adding a declaration that Jonathan is female (leaving the reference to Male intact). Therefore, Jonathan is both
+male and female, which our disjunction says is invalid... and when we check our reasoner again, it shows that the
+ontology is inconsistent.
+
+### Confession
+
+Unfortunately, this is *also* where the OWLAPI starts to lose me.
+
+The Semantic Web technologies not only provide a way to store information like our genealogy data, but query it; 
+we should be able to examine Joseph and Vicki, for example, and find that they are siblings because one or both of
+their parents are the same.
+
+Even better, I *think* we can even declare rules such that a reasoner could *assert* that they were siblings
+because of common parentage. Someone online even showed me how such a rule would be written in one of the OWL
+formats.
+
+However, it's not clear to me (yet) how to express such a relationship using OWLAPI. I can see a potential path
+using various axioms chained together; many of the `OWLDataFactory` methods even accept arrays of arguments, 
+which would seem to enable this. 
+
+But I haven't been able to properly or simply conceptualize how all of this would work in implementation rather
+than in theory, which speaks of two failures:
+
+1. The available material has failed to make it simple enough such that it's accessible to newbies like me, and 
+thus...
+1. I have failed to completely grasp the subject matter enough to write authoritatively about it.
+
+I have no problem acknowledging the second failure. 
+
+I'm writing this tutorial to say "here's a complete reference" but instead to preserve what I have learned in 
+using OWLAPI incompletely, as a data transferral protocol and as a static data store rather than as a 
+reasoning engine.
+
+If someone more experienced than I would like to collaborate on this to correct both my ignorance and the tutorial's
+incompleteness, you're welcome and invited to participate.
+
+### Back to Regular Programming
+
+The reasoning process that shows the invalidity of our data based on the hierarchy shows something important about
+OWL: it doesn't throw out our invalid data, but provides a way to tell us that our data is incorrect based on the
+assertions we've made.
+
+In other words, we said that a Human cannot be both Male and Female, and then we told it that a human was, in 
+fact, both. (I'm avoiding cis gender issues, thank you; this is a simple example and isn't meant to be a treatise
+on human biology or gender issues.) Because of the assertion of singular gender (and then the use of data that
+violated the assertion), our ontology is no longer consistent with itself - and the reasoner was able to tell us
+that.
+
+If we had greater reasoning skills, we could derive actual family models - determine cousins, uncles, aunts, 
+siblings, and more - and have the model tell us of gaps and unexpected relationships, all expressed and generated
+programmatically.
+
+However, at present most of that is beyond your author's knowledge and skill, and is beyond this tutorial's scope.
 
 Adding a Property Value to an Individual
 ----

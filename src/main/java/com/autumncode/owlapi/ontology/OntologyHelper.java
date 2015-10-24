@@ -1,6 +1,10 @@
 package com.autumncode.owlapi.ontology;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
+import org.semanticweb.owlapi.formats.RDFaDocumentFormat;
+import org.semanticweb.owlapi.formats.RioRDFXMLDocumentFormat;
+import org.semanticweb.owlapi.formats.RioTurtleDocumentFormat;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentSource;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
@@ -85,11 +89,6 @@ public class OntologyHelper {
         return new AddAxiom(o, df.getOWLClassAssertionAxiom(clazz, individual));
     }
 
-    public OWLAxiomChange addDisjointClass(OWLOntology o, OWLClass a, OWLClass b) {
-        OWLDisjointClassesAxiom expression=df.getOWLDisjointClassesAxiom(a, b);
-        return new AddAxiom(o, expression);
-    }
-
     public OWLObjectProperty createObjectProperty(String iri) {
         return createObjectProperty(convertStringToIRI(iri));
     }
@@ -98,10 +97,36 @@ public class OntologyHelper {
         return df.getOWLObjectProperty(iri);
     }
 
-    public OWLAxiomChange associateObjectPropertyWithClass(OWLOntology o, OWLObjectProperty property, OWLClass refHolder, OWLClass refTo) {
+    /**
+     * With ontology o, property in refHolder points to a refTo.
+     *
+     * @param o The ontology reference
+     * @param property the data property reference
+     * @param refHolder the container of the property
+     * @param refTo the class the property points to
+     * @return a patch to the ontology
+     */
+    public OWLAxiomChange associateObjectPropertyWithClass(OWLOntology o,
+                                                           OWLObjectProperty property,
+                                                           OWLClass refHolder,
+                                                           OWLClass refTo) {
         OWLClassExpression hasSomeRefTo=df.getOWLObjectSomeValuesFrom(property, refTo);
         OWLSubClassOfAxiom ax=df.getOWLSubClassOfAxiom(refHolder, hasSomeRefTo);
         return new AddAxiom(o, ax);
+    }
+
+    /**
+     * With ontology o, an object of class a cannot be simultaneously an object of class b.
+     * This is not implied to be an inverse relationship; saying that a cannot be a b does not
+     * mean that b cannot be an a.
+     * @param o the ontology reference
+     * @param a the source of the disjunction
+     * @param b the object of the disjunction
+     * @return a patch to the ontology
+     */
+    public OWLAxiomChange addDisjointClass(OWLOntology o, OWLClass a, OWLClass b) {
+        OWLDisjointClassesAxiom expression=df.getOWLDisjointClassesAxiom(a, b);
+        return new AddAxiom(o, expression);
     }
 
     public OWLAxiomChange addObjectproperty(OWLOntology o, OWLIndividual target, OWLObjectProperty property, OWLIndividual value) {

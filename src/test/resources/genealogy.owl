@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://autumncode.com/ontologies/genealogy.owl#"
+         xml:base="http://autumncode.com/ontologies/genealogy.owl"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:xml="http://www.w3.org/XML/1998/namespace"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:genealogy="http://autumncode.com/ontologies/genealogy.owl#">
+    <owl:Ontology rdf:about="http://autumncode.com/ontologies/genealogy.owl"/>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- hasFather -->
+
+    <owl:ObjectProperty rdf:about="http://autumncode.com/ontologies/genealogy.owl#hasFather"/>
+
+
+
+    <!-- hasMother -->
+
+    <owl:ObjectProperty rdf:about="http://autumncode.com/ontologies/genealogy.owl#hasMother"/>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- Female -->
+
+    <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Female">
+        <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+        <owl:disjointWith rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+    </owl:Class>
+
+
+
+    <!-- Male -->
+
+    <owl:Class rdf:about="http://autumncode.com/ontologies/genealogy.owl#Male">
+        <rdfs:subClassOf rdf:resource="http://autumncode.com/ontologies/geneaology.owl#Human"/>
+    </owl:Class>
+
+
+
+    <!-- Human -->
+
+    <owl:Class rdf:about="http://autumncode.com/ontologies/geneaology.owl#Human">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://autumncode.com/ontologies/genealogy.owl#hasFather"/>
+                <owl:someValuesFrom rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://autumncode.com/ontologies/genealogy.owl#hasMother"/>
+                <owl:someValuesFrom rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Female"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- andrew -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#andrew">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#samuel"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#mary"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- barry -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#barry">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- jonathan -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#jonathan">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#andrew"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#vicki"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- joseph -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#joseph">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#barry"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#shirley"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- mary -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#mary">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Female"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- michael -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#michael">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#thomas"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#shirley"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- samuel -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#samuel">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- shirley -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#shirley">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Female"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- thomas -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#thomas">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Male"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- vicki -->
+
+    <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/genealogy.owl#vicki">
+        <rdf:type rdf:resource="http://autumncode.com/ontologies/genealogy.owl#Female"/>
+        <hasFather rdf:resource="http://autumncode.com/ontologies/genealogy.owl#thomas"/>
+        <hasMother rdf:resource="http://autumncode.com/ontologies/genealogy.owl#shirley"/>
+    </owl:NamedIndividual>
+</rdf:RDF>
+
+
+
+        <!-- Generated by the OWL API (version 4.1.0-RC2.20150605-1957) http://owlapi.sourceforge.net -->
