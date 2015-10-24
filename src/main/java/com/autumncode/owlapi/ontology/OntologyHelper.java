@@ -9,6 +9,7 @@ import org.semanticweb.owlapi.io.OWLOntologyDocumentSource;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
 import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.vocab.OWL2Datatype;
 
 import java.util.Arrays;
 
@@ -23,6 +24,7 @@ public class OntologyHelper {
     /**
      * Simple method to write an OWL structure to <code>System.out</code>. It is basically a wrapper
      * for the writeOntology method.
+     *
      * @param ontology the ontology to display
      */
     public void dumpOWL(OWLOntology ontology) {
@@ -93,25 +95,25 @@ public class OntologyHelper {
         return createObjectProperty(convertStringToIRI(iri));
     }
 
-    private OWLObjectProperty createObjectProperty(IRI iri) {
+    public OWLObjectProperty createObjectProperty(IRI iri) {
         return df.getOWLObjectProperty(iri);
     }
 
     /**
      * With ontology o, property in refHolder points to a refTo.
      *
-     * @param o The ontology reference
-     * @param property the data property reference
+     * @param o         The ontology reference
+     * @param property  the data property reference
      * @param refHolder the container of the property
-     * @param refTo the class the property points to
+     * @param refTo     the class the property points to
      * @return a patch to the ontology
      */
     public OWLAxiomChange associateObjectPropertyWithClass(OWLOntology o,
                                                            OWLObjectProperty property,
                                                            OWLClass refHolder,
                                                            OWLClass refTo) {
-        OWLClassExpression hasSomeRefTo=df.getOWLObjectSomeValuesFrom(property, refTo);
-        OWLSubClassOfAxiom ax=df.getOWLSubClassOfAxiom(refHolder, hasSomeRefTo);
+        OWLClassExpression hasSomeRefTo = df.getOWLObjectSomeValuesFrom(property, refTo);
+        OWLSubClassOfAxiom ax = df.getOWLSubClassOfAxiom(refHolder, hasSomeRefTo);
         return new AddAxiom(o, ax);
     }
 
@@ -119,18 +121,42 @@ public class OntologyHelper {
      * With ontology o, an object of class a cannot be simultaneously an object of class b.
      * This is not implied to be an inverse relationship; saying that a cannot be a b does not
      * mean that b cannot be an a.
+     *
      * @param o the ontology reference
      * @param a the source of the disjunction
      * @param b the object of the disjunction
      * @return a patch to the ontology
      */
     public OWLAxiomChange addDisjointClass(OWLOntology o, OWLClass a, OWLClass b) {
-        OWLDisjointClassesAxiom expression=df.getOWLDisjointClassesAxiom(a, b);
+        OWLDisjointClassesAxiom expression = df.getOWLDisjointClassesAxiom(a, b);
         return new AddAxiom(o, expression);
     }
 
     public OWLAxiomChange addObjectproperty(OWLOntology o, OWLIndividual target, OWLObjectProperty property, OWLIndividual value) {
-        OWLObjectPropertyAssertionAxiom prop=df.getOWLObjectPropertyAssertionAxiom(property, target, value);
+        OWLObjectPropertyAssertionAxiom prop = df.getOWLObjectPropertyAssertionAxiom(property, target, value);
         return new AddAxiom(o, prop);
+    }
+
+    public OWLDataProperty createDataProperty(String iri) {
+        return createDataProperty(convertStringToIRI(iri));
+    }
+
+    public OWLDataProperty createDataProperty(IRI iri) {
+        return df.getOWLDataProperty(iri);
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, OWLDataProperty property, String value) {
+        OWLLiteral literal = df.getOWLLiteral(value, OWL2Datatype.XSD_STRING);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, OWLDataProperty property, boolean value) {
+        OWLLiteral literal = df.getOWLLiteral(value);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, OWLDataProperty property, int value) {
+        OWLLiteral literal = df.getOWLLiteral(value);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
     }
 }

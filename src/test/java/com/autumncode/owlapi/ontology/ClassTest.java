@@ -4,7 +4,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
 import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.vocab.OWLFacet;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import uk.ac.manchester.cs.jfact.JFactFactory;
@@ -175,7 +177,6 @@ public class ClassTest {
                 oh.addObjectproperty(o, jonathan, hasFather, andrew)
         );
 
-        oh.dumpOWL(o);
         OWLReasoner reasoner = new JFactFactory().createReasoner(o);
         try (final AutoCloseable ignored = reasoner::dispose) {
             assertTrue(reasoner.isConsistent());
@@ -185,5 +186,22 @@ public class ClassTest {
         try (final AutoCloseable ignored = reasoner::dispose) {
             assertFalse(reasoner.isConsistent());
         }
+    }
+
+    @Test
+    public void addDataToIndividual() throws Exception {
+        OntologyHelper oh = new OntologyHelper();
+        OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/terminator.owl");
+        OWLClass terminator = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Terminator");
+        OWLDataProperty killsHumans =
+                oh.createDataProperty("http://autumncode.com/ontologies/terminator.owl#killsHumans");
+        OWLIndividual t800 = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#t800");
+        OWLIndividual pops = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#pops");
+        oh.applyChange(
+                oh.associateIndividualWithClass(o, terminator, pops),
+                oh.associateIndividualWithClass(o, terminator, t800),
+                oh.addDataToIndividual(o, t800, killsHumans, true),
+                oh.addDataToIndividual(o, pops, killsHumans, false)
+        );
     }
 }

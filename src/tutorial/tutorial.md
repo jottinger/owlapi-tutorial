@@ -992,5 +992,152 @@ programmatically.
 
 However, at present most of that is beyond your author's knowledge and skill, and is beyond this tutorial's scope.
 
-Adding a Property Value to an Individual
-----
+## Review
+
+* We have created, saved, and loaded ontologies, which represents a system of knowledge
+* We have created classes in an ontology, which represent ways of thinking about items.
+** We have seen that classes can be present in a hierarchy, such that elements of class B are also elements of type A.
+** We have seen that we can also declare classes as optionally being exclusive of one 
+another. Therefore, we can say that if something is of class A, it cannot legitimately be of class B at the same time.
+* We have seen how we can create individuals in an ontology.
+** We have seen how we can add attributes to the individuals such that we define their classes, 
+and we've seen that an individual is not limited to one class.
+** We have added references to other individuals to a given individual, and also declare that the references 
+must be drawn from a specific domain. (We can say that a reference, A, must be to members of class B.)
+* We have seen how to use a reasoner to validate that our ontology, the class structure, and the individuals in 
+it are consistent, with no contradictory information.
+
+One thing we've not done, though, is add simple data to an individual.
+
+## Adding a Property Value to an Individual
+
+When we add a reference to an individual as a property of another individual ("John's mother is Andrea"), 
+we are adding what OWLAPI calls an "Object Property." Another type of property is a Data Property, which
+can be used in almost the exact same way.
+
+Let's go back to the Terminator. We'll declare a simple ontology that tracks the T800, and tracks whether
+it is an enemy or not.
+
+Here's our ontology declaration as a test. After we see this, we'll take a look at the `OntologyHelper` methods
+that make it work:
+
+    @Test
+    public void addDataToIndividual() throws Exception {
+        OntologyHelper oh = new OntologyHelper();
+        OWLOntology o = oh.createOntology("http://autumncode.com/ontologies/terminator.owl");
+        OWLClass terminator = oh.createClass("http://autumncode.com/ontologies/terminator.owl#Terminator");
+        OWLDataProperty killsHumans =
+                oh.createDataProperty("http://autumncode.com/ontologies/terminator.owl#killsHumans");
+        OWLIndividual t800 = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#t800");
+        OWLIndividual pops = oh.createIndividual("http://autumncode.com/ontologies/terminator.owl#pops");
+        oh.applyChange(
+                oh.associateIndividualWithClass(o, terminator, pops),
+                oh.associateIndividualWithClass(o, terminator, t800),
+                oh.addDataToIndividual(o, t800, killsHumans, true),
+                oh.addDataToIndividual(o, pops, killsHumans, false)
+        );
+    }
+
+Now the `OntologyHelper` methods for creating the data property and adding data to a given individual:
+
+    public OWLDataProperty createDataProperty(String iri) {
+        return createDataProperty(convertStringToIRI(iri));
+    }
+
+    public OWLDataProperty createDataProperty(IRI iri) {
+        return df.getOWLDataProperty(iri);
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, 
+            OWLDataProperty property, String value) {
+        OWLLiteral literal = df.getOWLLiteral(value, OWL2Datatype.XSD_STRING);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, 
+            OWLDataProperty property, boolean value) {
+        OWLLiteral literal = df.getOWLLiteral(value);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
+    }
+
+    public OWLAxiomChange addDataToIndividual(OWLOntology o, OWLIndividual individual, 
+            OWLDataProperty property, int value) {
+        OWLLiteral literal = df.getOWLLiteral(value);
+        return new AddAxiom(o, df.getOWLDataPropertyAssertionAxiom(property, individual, literal));
+    }
+
+These are, as you might expect, almost exact analogies for the methods that add object properties to individuals.
+The main difference here is that we actually deal with data, so we have overloaded argument types for the
+`addDataToIndividual` method. (The `getOWLDataPropertyAssertionAxiom` method can take the actual primitive
+values and render the proper types.)
+
+So what does the generated data look like? That's simple enough:
+
+    <?xml version="1.0"?>
+    <rdf:RDF xmlns="http://autumncode.com/ontologies/terminator.owl#"
+         xml:base="http://autumncode.com/ontologies/terminator.owl"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:xml="http://www.w3.org/XML/1998/namespace"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:terminator="http://autumncode.com/ontologies/terminator.owl#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+        <owl:Ontology rdf:about="http://autumncode.com/ontologies/terminator.owl"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Data properties
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- killsHumans -->
+
+        <owl:DatatypeProperty rdf:about="http://autumncode.com/ontologies/terminator.owl#killsHumans"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Classes
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- Terminator -->
+
+        <owl:Class rdf:about="http://autumncode.com/ontologies/terminator.owl#Terminator"/>
+
+        <!-- 
+        ///////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Individuals
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////
+         -->
+
+        <!-- pops -->
+
+        <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/terminator.owl#pops">
+            <rdf:type rdf:resource="http://autumncode.com/ontologies/terminator.owl#Terminator"/>
+            <killsHumans rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</killsHumans>
+        </owl:NamedIndividual>
+
+        <!-- t800 -->
+
+        <owl:NamedIndividual rdf:about="http://autumncode.com/ontologies/terminator.owl#t800">
+            <rdf:type rdf:resource="http://autumncode.com/ontologies/terminator.owl#Terminator"/>
+            <killsHumans rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</killsHumans>
+        </owl:NamedIndividual>
+    </rdf:RDF>
+
+## Final Thoughts
+
+What we've tried to cover is actually pretty light: "how to add data into an ontology using OWLAPI," really.
+There are supposed to be a lot of features provided by OWL that we've not even begun to touch; we should,
+for example, be able to infer which T800s are to be avoided in our last example (based on whether the
+individual kills humans or not.)
+
+At the very least, we should be able to write a query to determine whether a T800 is a bad guy or not.
+However, that's out of the scope of this tutorial at this point; I mostly wanted to preserve what I knew
+of OWLAPI for others to use.
