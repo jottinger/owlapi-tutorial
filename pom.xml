@@ -13,12 +13,12 @@
             <dependency>
                 <groupId>net.sourceforge.owlapi</groupId>
                 <artifactId>owlapi-distribution</artifactId>
-                <version>[4.0.2,)</version>
+                <version>[4.0.2,4.9.9)</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.owlapi</groupId>
                 <artifactId>owlapi-rio</artifactId>
-                <version>[4.0.2,)</version>
+                <version>[4.0.2,4.9.9)</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.owlapi</groupId>
